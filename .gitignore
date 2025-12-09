@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Package files
+package.json
+package-lock.json
+composer.json
+composer.lock
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+test-*.js
+tests/
+phpunit.xml
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
