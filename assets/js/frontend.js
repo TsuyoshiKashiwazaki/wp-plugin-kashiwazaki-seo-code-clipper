@@ -3,7 +3,7 @@
 
     /**
      * Kashiwazaki SEO Code Clipper - Frontend JavaScript
-     * コードブロックにコピーボタンと言語ラベルを追加
+     * コードブロックとインラインコードにコピーボタンと言語ラベルを追加
      */
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -14,50 +14,127 @@
      * コピー機能を初期化
      */
     function initCodeClipper() {
-        var codeBlocks = getTargetCodeBlocks();
+        var settings = window.ksccSettings || {};
+        var targetMode = settings.targetMode || 'pre_only';
 
-        codeBlocks.forEach(function(codeBlock) {
-            wrapCodeBlock(codeBlock);
+        // preタグ（複数行コード）の処理
+        if (targetMode === 'pre_only' || targetMode === 'pre_and_code') {
+            var preBlocks = getPreBlocks();
+            preBlocks.forEach(function(preBlock) {
+                wrapPreBlock(preBlock);
+            });
+        }
+
+        // codeタグ（インラインコード）の処理
+        if (targetMode === 'code_only' || targetMode === 'pre_and_code') {
+            var inlineCodes = getInlineCodes();
+            inlineCodes.forEach(function(codeElement) {
+                wrapInlineCode(codeElement);
+            });
+        }
+
+        // クラス指定モードの処理
+        if (targetMode === 'class_only') {
+            var targetClass = settings.targetClass || '';
+            if (targetClass) {
+                var classElements = getElementsByClass(targetClass);
+                classElements.forEach(function(element) {
+                    if (element.tagName.toLowerCase() === 'pre') {
+                        wrapPreBlock(element);
+                    } else if (element.tagName.toLowerCase() === 'code' && !isInsidePre(element)) {
+                        wrapInlineCode(element);
+                    } else if (element.querySelector('pre')) {
+                        // 指定クラスを持つ要素内のpreを処理
+                        var preElements = element.querySelectorAll('pre');
+                        preElements.forEach(function(pre) {
+                            wrapPreBlock(pre);
+                        });
+                    } else if (element.querySelector('code')) {
+                        // 指定クラスを持つ要素内のcodeを処理
+                        var codeElements = element.querySelectorAll('code');
+                        codeElements.forEach(function(code) {
+                            if (!isInsidePre(code)) {
+                                wrapInlineCode(code);
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    }
+
+    /**
+     * preタグを取得
+     */
+    function getPreBlocks() {
+        return Array.prototype.slice.call(
+            document.querySelectorAll('pre.wp-block-code, pre.wp-block-preformatted, .wp-block-code pre, pre:not(.kscc-processed)')
+        ).filter(function(pre) {
+            // 既にラップされている場合はスキップ
+            return !pre.parentNode.classList.contains('kscc-code-wrapper');
         });
     }
 
     /**
-     * 対象のコードブロックを取得
+     * インラインのcodeタグを取得（pre内のcodeは除外）
      */
-    function getTargetCodeBlocks() {
-        var settings = window.ksccSettings || {};
-        var targetMode = settings.targetMode || 'all';
-        var targetClass = settings.targetClass || '';
-        var codeBlocks = [];
-
-        if (targetMode === 'all') {
-            // すべてのpreタグを取得（WordPress標準のコードブロック）
-            codeBlocks = Array.prototype.slice.call(document.querySelectorAll('pre.wp-block-code, pre.wp-block-preformatted, .wp-block-code pre'));
-        } else if (targetMode === 'class' && targetClass) {
-            // 指定されたクラスを持つpreタグのみを取得
-            var classes = targetClass.split(',').map(function(cls) {
-                return cls.trim();
-            }).filter(function(cls) {
-                return cls.length > 0;
-            });
-
-            classes.forEach(function(cls) {
-                var elements = document.querySelectorAll('pre.' + cls + ', .' + cls + ' pre');
-                Array.prototype.slice.call(elements).forEach(function(el) {
-                    if (codeBlocks.indexOf(el) === -1) {
-                        codeBlocks.push(el);
-                    }
-                });
-            });
-        }
-
-        return codeBlocks;
+    function getInlineCodes() {
+        return Array.prototype.slice.call(
+            document.querySelectorAll('code')
+        ).filter(function(code) {
+            // pre内のcodeは除外
+            if (isInsidePre(code)) {
+                return false;
+            }
+            // 既にラップされている場合はスキップ
+            if (code.parentNode.classList.contains('kscc-inline-code-wrapper')) {
+                return false;
+            }
+            return true;
+        });
     }
 
     /**
-     * コードブロックをラッパーで囲み、コピーボタンと言語ラベルを追加
+     * 指定クラスを持つ要素を取得
      */
-    function wrapCodeBlock(preElement) {
+    function getElementsByClass(classNames) {
+        var classes = classNames.split(',').map(function(cls) {
+            return cls.trim();
+        }).filter(function(cls) {
+            return cls.length > 0;
+        });
+
+        var elements = [];
+        classes.forEach(function(cls) {
+            var found = document.querySelectorAll('.' + cls);
+            Array.prototype.slice.call(found).forEach(function(el) {
+                if (elements.indexOf(el) === -1) {
+                    elements.push(el);
+                }
+            });
+        });
+
+        return elements;
+    }
+
+    /**
+     * 要素がpre内にあるかチェック
+     */
+    function isInsidePre(element) {
+        var parent = element.parentNode;
+        while (parent) {
+            if (parent.tagName && parent.tagName.toLowerCase() === 'pre') {
+                return true;
+            }
+            parent = parent.parentNode;
+        }
+        return false;
+    }
+
+    /**
+     * preブロックをラッパーで囲み、コピーボタンと言語ラベルを追加
+     */
+    function wrapPreBlock(preElement) {
         // 既にラップされている場合はスキップ
         if (preElement.parentNode.classList.contains('kscc-code-wrapper')) {
             return;
@@ -100,13 +177,55 @@
         // コピーイベントを設定
         copyButton.addEventListener('click', function(e) {
             e.preventDefault();
-            copyToClipboard(preElement, copyButton, tooltip, language);
+            copyToClipboard(codeText, copyButton, tooltip, language);
         });
 
         // 要素を配置
         preElement.parentNode.insertBefore(wrapper, preElement);
         wrapper.appendChild(copyButton);
         wrapper.appendChild(preElement);
+    }
+
+    /**
+     * インラインコードをラッパーで囲み、コピー機能を追加
+     */
+    function wrapInlineCode(codeElement) {
+        // 既にラップされている場合はスキップ
+        if (codeElement.parentNode.classList.contains('kscc-inline-code-wrapper')) {
+            return;
+        }
+
+        var settings = window.ksccSettings || {};
+        var codeText = codeElement.textContent;
+
+        // ラッパー要素を作成
+        var wrapper = document.createElement('span');
+        wrapper.className = 'kscc-inline-code-wrapper';
+
+        // コピーボタンを作成
+        var copyButton = document.createElement('button');
+        copyButton.className = 'kscc-inline-copy-button';
+        copyButton.type = 'button';
+        copyButton.setAttribute('aria-label', settings.copyText || 'コピー');
+        copyButton.innerHTML = createCopyIcon();
+
+        // ツールチップを作成
+        var tooltip = document.createElement('span');
+        tooltip.className = 'kscc-tooltip';
+        tooltip.textContent = settings.copyText || 'コピー';
+        copyButton.appendChild(tooltip);
+
+        // コピーイベントを設定
+        copyButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            copyToClipboard(codeText, copyButton, tooltip, null);
+        });
+
+        // 要素を配置
+        codeElement.parentNode.insertBefore(wrapper, codeElement);
+        wrapper.appendChild(codeElement);
+        wrapper.appendChild(copyButton);
     }
 
     /**
@@ -412,18 +531,18 @@
      * コピーアイコンSVGを作成
      */
     function createCopyIcon() {
-        return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
     }
 
     /**
      * チェックアイコンSVGを作成
      */
     function createCheckIcon() {
-        return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
     }
 
     /**
-     * 文字列のMD5ハッシュを計算（簡易版）
+     * 文字列のハッシュを計算（簡易版）
      */
     function simpleHash(str) {
         var hash = 0;
@@ -441,11 +560,7 @@
     /**
      * クリップボードにコピー
      */
-    function copyToClipboard(preElement, button, tooltip, language) {
-        // codeタグがある場合はその内容を、なければpreタグの内容を取得
-        var codeElement = preElement.querySelector('code');
-        var textToCopy = codeElement ? codeElement.textContent : preElement.textContent;
-
+    function copyToClipboard(textToCopy, button, tooltip, language) {
         // Clipboard APIを使用
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(textToCopy).then(function() {

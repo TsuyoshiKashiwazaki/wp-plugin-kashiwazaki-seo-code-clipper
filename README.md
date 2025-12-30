@@ -3,73 +3,98 @@
 ![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPLv2%2B-green.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)
 
-Adds a copy-to-clipboard button to WordPress Gutenberg code blocks. Features automatic programming language detection with labels and copy tracking analytics for SEO optimization.
+WordPress のコードブロックとインラインコードにコピーボタンを追加するプラグインです。プログラミング言語を自動判別してラベル表示し、コピー統計も記録できます。
 
-## Features
+Adds a copy-to-clipboard button to WordPress code blocks and inline code with automatic language detection and copy tracking analytics.
 
-- Copy button on code blocks (top-right corner)
-- Automatic programming language detection and labeling
-- Copy tracking analytics for SEO insights
-- Customizable background and text colors
-- Option to apply only to specific CSS classes
+## Features / 機能
 
-## Supported Languages
+- **コードブロック対応** - `<pre>` タグのコードブロックにコピーボタンを追加
+- **インラインコード対応** - 文章中の `<code>` タグにもコピーボタンを追加
+- **言語自動判別** - コードの内容から言語を自動判別してラベル表示
+- **コピー統計** - どのコードがよくコピーされているか記録・分析
+- **タブ式管理画面** - 設定・コピー統計・使い方を1ページで管理
+- **カスタマイズ可能** - 背景色・テキスト色を自由に設定
+- **柔軟な適用範囲** - 全コード、特定タイプ、CSSクラス指定に対応
+
+## Application Modes / 適用モード
+
+コピーボタンを表示する対象を選択できます：
+
+| モード | 説明 |
+|--------|------|
+| **複数行コード（`<pre>`タグ）のみ** | WordPress標準の「コード」ブロック等 |
+| **インラインコード（`<code>`タグ）のみ** | 文章中の短いコードのみ |
+| **すべてのコード（`<pre>` + `<code>`タグ）** | 上記2つの両方 |
+| **指定したCSSクラスを持つ要素のみ** | 特定の要素だけに適用 |
+
+## Supported Languages / 対応言語
 
 PHP, JavaScript, TypeScript, Python, HTML, CSS, SQL, Bash, JSON, YAML, XML, Ruby, Go, Java, C#, Markdown, and more.
 
-## Installation
+## Installation / インストール
 
-1. Upload the plugin folder to `/wp-content/plugins/`
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to 'Kashiwazaki SEO Code Clipper' in the admin menu to configure settings
+1. プラグインフォルダを `/wp-content/plugins/` にアップロード
+2. WordPress管理画面の「プラグイン」メニューから有効化
+3. 「Kashiwazaki SEO Code Clipper」メニューで設定
 
-## Settings
+## Settings / 設定
 
-### Display Settings
-- **Background Color**: Default is black (#000000)
-- **Text Color**: Default is white (#ffffff)
+### 適用モード
+- 複数行コードのみ / インラインコードのみ / すべてのコード / CSSクラス指定
 
-### Copy Button Scope
-- **All code blocks**: Apply to all code blocks
-- **Specific classes only**: Apply only to code blocks with specified CSS classes
+### 表示スタイル
+- **背景色**: デフォルトは黒（#000000）
+- **テキスト色**: デフォルトは白（#ffffff）
 
-### Additional Features
-- **Language Label**: Show/hide auto-detected language label
-- **Copy Tracking**: Enable/disable copy statistics recording
+### 追加機能
+- **言語ラベル**: 自動判別した言語名を表示/非表示
+- **コピー統計**: コピー回数の記録を有効/無効
 
-## Copy Statistics
+## Admin Interface / 管理画面
 
-View copy statistics in the admin menu under 'Kashiwazaki SEO Code Clipper' > 'Copy Statistics'.
+タブ切り替え式の管理画面：
 
-Statistics include:
-- Total copy count
-- Number of tracked code blocks
-- Per-page and per-code copy counts
-- Detected language
-- Last copied timestamp
+1. **設定タブ** - 適用モード、表示スタイル、追加機能の設定
+2. **コピー統計タブ** - コピー回数のランキング、ページ別・言語別の統計
+3. **使い方タブ** - 各モードの説明、設定方法、FAQ
 
-## Requirements
+## Requirements / 動作環境
 
-- WordPress 5.0 or higher
-- PHP 7.4 or higher
+- WordPress 5.0 以上
+- PHP 7.4 以上
 
-## Changelog
+## Changelog / 更新履歴
 
-### [1.0.0] - 2025-12-09
-- Initial release
-- Copy button functionality
-- Automatic language detection
-- Copy tracking analytics
-- Admin settings page
+### [1.0.1] - 2025-12-30
 
-## License
+#### Added / 追加
+- タブ式管理画面（設定・コピー統計・使い方）
+- インラインコード（`<code>`タグ）のコピーボタン対応
+- 新しい適用モード「インラインコードのみ」「すべてのコード」
+- 使い方タブ（ビジュアル例とFAQ付き）
 
-This plugin is licensed under the GPL v2 or later.
+#### Improved / 改善
+- 適用モード選択をカード形式のラジオボタンに変更
+- 設定の説明文をより具体的でわかりやすく改善
+- 管理画面のレスポンシブデザイン対応
+- CSSクラス指定機能の説明を改善
 
-## Author
+### [1.0.0] - 2024-12-09
+- 初回リリース
+- コードブロックへのコピーボタン機能
+- 言語自動判別
+- コピー統計機能
+- 管理画面設定ページ
 
-Tsuyoshi Kashiwazaki
+## License / ライセンス
+
+GPL v2 or later
+
+## Author / 作者
+
+柏崎剛 (Tsuyoshi Kashiwazaki)
 - Website: https://www.tsuyoshikashiwazaki.jp
 - Profile: https://www.tsuyoshikashiwazaki.jp/profile/
