@@ -2,9 +2,173 @@
  * Kashiwazaki SEO Code Clipper - Admin Styles
  */
 
-/* 設定ページ */
-.wrap h1 {
+/* ========================================
+   全体レイアウト
+   ======================================== */
+
+.kscc-admin-wrap {
+    max-width: 1000px;
+}
+
+.kscc-admin-wrap h1 {
     margin-bottom: 20px;
+}
+
+/* タブナビゲーション */
+.kscc-nav-tabs {
+    margin-bottom: 0;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+.kscc-nav-tabs .nav-tab {
+    margin-bottom: -1px;
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+.kscc-nav-tabs .nav-tab-active {
+    background: #fff;
+    border-bottom-color: #fff;
+}
+
+/* タブコンテンツ */
+.kscc-tab-content {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-top: none;
+    padding: 20px 25px;
+}
+
+/* ========================================
+   設定タブ
+   ======================================== */
+
+.kscc-settings-section {
+    margin-bottom: 30px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.kscc-settings-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.kscc-settings-section h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1d2327;
+    border: none;
+    padding: 0;
+}
+
+.kscc-section-desc {
+    margin: 0 0 20px;
+    color: #646970;
+    font-size: 13px;
+}
+
+/* ラジオカード */
+.kscc-target-mode-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.kscc-radio-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px 18px;
+    background: #f9f9f9;
+    border: 2px solid #dcdcde;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.kscc-radio-card:hover {
+    border-color: #2271b1;
+    background: #f0f6fc;
+}
+
+.kscc-radio-card.selected {
+    border-color: #2271b1;
+    background: #f0f6fc;
+}
+
+.kscc-radio-card input[type="radio"] {
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.kscc-radio-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.kscc-radio-card-content strong {
+    font-size: 14px;
+    color: #1d2327;
+}
+
+.kscc-radio-desc {
+    font-size: 13px;
+    color: #646970;
+    line-height: 1.5;
+}
+
+.kscc-radio-example {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 4px;
+    font-size: 12px;
+    color: #50575e;
+    line-height: 1.5;
+}
+
+.kscc-example-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #1d2327;
+}
+
+.kscc-radio-card code {
+    padding: 2px 5px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+/* クラス入力フィールド */
+.kscc-class-input-row td {
+    padding-left: 30px;
+}
+
+.kscc-howto-box {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f0f6fc;
+    border-left: 4px solid #2271b1;
+    border-radius: 0 4px 4px 0;
+}
+
+.kscc-howto-box p {
+    margin: 0 0 10px;
+}
+
+.kscc-howto-box ol {
+    margin: 0 0 0 20px;
+    padding: 0;
+}
+
+.kscc-howto-box ol li {
+    margin-bottom: 5px;
 }
 
 /* カラーピッカー */
@@ -12,53 +176,31 @@
     display: inline-block;
 }
 
-/* セクションのスタイル */
-.form-table th {
-    width: 200px;
-    padding: 20px 10px 20px 0;
+/* フォームテーブル */
+.kscc-settings-section .form-table th {
+    width: 180px;
+    padding: 15px 10px 15px 0;
+    font-weight: 500;
 }
 
-.form-table td {
+.kscc-settings-section .form-table td {
     padding: 15px 10px;
 }
 
-/* フィールドの説明文 */
-.form-table td p.description {
-    margin-top: 8px;
+.kscc-settings-section .form-table td p.description {
+    margin-top: 6px;
     color: #646970;
-}
-
-/* ラジオボタンのグループ */
-.form-table fieldset label {
-    display: block;
-    margin-bottom: 8px;
-}
-
-.form-table fieldset label:last-child {
-    margin-bottom: 0;
-}
-
-/* 入力フィールド */
-.form-table input.regular-text {
-    width: 300px;
-}
-
-/* 設定セクションのヘッダー */
-h2 {
-    margin-top: 30px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #c3c4c7;
+    font-size: 12px;
 }
 
 /* ========================================
-   統計ページのスタイル
+   統計タブ
    ======================================== */
 
-/* 統計サマリー */
 .kscc-stats-summary {
     display: flex;
     gap: 20px;
-    margin: 20px 0 30px;
+    margin-bottom: 25px;
 }
 
 .kscc-stat-box {
@@ -66,30 +208,49 @@ h2 {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 180px;
+    min-width: 160px;
     padding: 20px 30px;
-    background: #fff;
+    background: #f0f6fc;
     border: 1px solid #c3c4c7;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .kscc-stat-number {
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 700;
-    color: #1d2327;
+    color: #2271b1;
     line-height: 1.2;
 }
 
 .kscc-stat-label {
-    margin-top: 8px;
+    margin-top: 6px;
     font-size: 13px;
     color: #646970;
 }
 
-/* 統計テーブル */
-.kscc-stats-summary + .wp-list-table {
-    margin-top: 0;
+/* 空の状態 */
+.kscc-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #646970;
+}
+
+.kscc-empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.kscc-empty-state h2 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    color: #1d2327;
+    border: none;
+    padding: 0;
+}
+
+.kscc-empty-state p {
+    margin: 0;
+    font-size: 14px;
 }
 
 /* コードプレビュー */
@@ -120,18 +281,16 @@ h2 {
     border-radius: 3px;
 }
 
-/* 言語なし表示 */
 .kscc-no-language {
     color: #a7aaad;
 }
 
-/* 削除済み投稿 */
 .kscc-deleted-post {
     color: #a7aaad;
     font-style: italic;
 }
 
-/* テーブル内のリンク */
+/* テーブル */
 .wp-list-table td a {
     font-weight: 500;
 }
@@ -140,8 +299,197 @@ h2 {
     color: #135e96;
 }
 
-/* レスポンシブ対応 */
+/* ========================================
+   使い方タブ
+   ======================================== */
+
+.kscc-guide-content {
+    max-width: 900px;
+}
+
+.kscc-guide-section {
+    margin-bottom: 30px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.kscc-guide-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.kscc-guide-section h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1d2327;
+    border: none;
+    padding: 0;
+}
+
+/* 機能リスト */
+.kscc-feature-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.kscc-feature-list li {
+    padding: 8px 0 8px 28px;
+    position: relative;
+    line-height: 1.6;
+}
+
+.kscc-feature-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #46b450;
+    font-weight: bold;
+}
+
+/* モードカード */
+.kscc-mode-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.kscc-mode-card {
+    padding: 20px;
+    background: #f9f9f9;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+}
+
+.kscc-mode-card h3 {
+    margin: 0 0 15px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.kscc-mode-example {
+    font-size: 13px;
+    color: #50575e;
+    line-height: 1.6;
+}
+
+.kscc-mode-example p {
+    margin: 0 0 10px;
+}
+
+/* ビジュアル例 */
+.kscc-visual-example {
+    margin: 10px 0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.kscc-pre-example {
+    background: #1e1e1e;
+}
+
+.kscc-example-header {
+    padding: 8px 12px;
+    background: #2d2d2d;
+}
+
+.kscc-example-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff;
+    background: #46b450;
+    border-radius: 3px;
+}
+
+.kscc-visual-example pre {
+    margin: 0;
+    padding: 12px 15px;
+    font-size: 12px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    color: #d4d4d4;
+    background: #1e1e1e;
+    overflow-x: auto;
+}
+
+.kscc-visual-example pre code {
+    background: transparent;
+    padding: 0;
+}
+
+/* インライン例 */
+.kscc-inline-example {
+    padding: 12px 15px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+}
+
+.kscc-inline-code-example {
+    padding: 2px 6px;
+    background: #e8e8e8;
+    border-radius: 3px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+}
+
+.kscc-howto {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #fff;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.kscc-howto code {
+    padding: 1px 4px;
+    background: #e8e8e8;
+    border-radius: 2px;
+    font-size: 11px;
+}
+
+/* FAQ */
+.kscc-faq {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.kscc-faq-item {
+    padding: 15px 18px;
+    background: #f9f9f9;
+    border-radius: 6px;
+}
+
+.kscc-faq-item h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.kscc-faq-item p {
+    margin: 0;
+    font-size: 13px;
+    color: #50575e;
+    line-height: 1.6;
+}
+
+/* ========================================
+   レスポンシブ対応
+   ======================================== */
+
 @media screen and (max-width: 782px) {
+    .kscc-tab-content {
+        padding: 15px;
+    }
+
     .kscc-stats-summary {
         flex-direction: column;
     }
@@ -151,7 +499,22 @@ h2 {
         width: 100%;
     }
 
-    .kscc-stat-number {
-        font-size: 28px;
+    .kscc-mode-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .kscc-settings-section .form-table th {
+        width: auto;
+        display: block;
+        padding-bottom: 5px;
+    }
+
+    .kscc-settings-section .form-table td {
+        display: block;
+        padding-left: 0;
+    }
+
+    .kscc-class-input-row td {
+        padding-left: 0;
     }
 }

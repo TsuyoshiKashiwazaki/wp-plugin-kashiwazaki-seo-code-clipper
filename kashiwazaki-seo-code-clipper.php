@@ -3,7 +3,7 @@
  * Plugin Name: Kashiwazaki SEO Code Clipper
  * Plugin URI: https://www.tsuyoshikashiwazaki.jp
  * Description: Adds a copy-to-clipboard button to WordPress Gutenberg code blocks. Features automatic programming language detection with labels and copy tracking analytics for SEO optimization.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: 柏崎剛 (Tsuyoshi Kashiwazaki)
  * Author URI: https://www.tsuyoshikashiwazaki.jp/profile/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // プラグインの定数
-define('KSCC_VERSION', '1.0.0');
+define('KSCC_VERSION', '1.0.1');
 define('KSCC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KSCC_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KSCC_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -39,7 +39,7 @@ class Kashiwazaki_SEO_Code_Clipper {
     private $default_options = array(
         'background_color' => '#000000',
         'text_color' => '#ffffff',
-        'target_mode' => 'all',
+        'target_mode' => 'pre_only',
         'target_class' => '',
         'show_language_label' => true,
         'enable_copy_tracking' => true,
@@ -77,7 +77,7 @@ class Kashiwazaki_SEO_Code_Clipper {
     }
 
     /**
-     * 管理メニューを追加
+     * 管理メニューを追加（サブメニューなし、1ページにタブで統合）
      */
     public function add_admin_menu() {
         add_menu_page(
@@ -85,27 +85,9 @@ class Kashiwazaki_SEO_Code_Clipper {
             'Kashiwazaki SEO Code Clipper',
             'manage_options',
             'kashiwazaki-seo-code-clipper',
-            array($this, 'render_settings_page'),
+            array($this, 'render_admin_page'),
             'dashicons-clipboard',
             81
-        );
-
-        add_submenu_page(
-            'kashiwazaki-seo-code-clipper',
-            '設定 - Kashiwazaki SEO Code Clipper',
-            '設定',
-            'manage_options',
-            'kashiwazaki-seo-code-clipper',
-            array($this, 'render_settings_page')
-        );
-
-        add_submenu_page(
-            'kashiwazaki-seo-code-clipper',
-            'コピー統計 - Kashiwazaki SEO Code Clipper',
-            'コピー統計',
-            'manage_options',
-            'kashiwazaki-seo-code-clipper-stats',
-            array($this, 'render_stats_page')
         );
     }
 
@@ -117,75 +99,6 @@ class Kashiwazaki_SEO_Code_Clipper {
             'kscc_settings_group',
             'kscc_options',
             array($this, 'sanitize_options')
-        );
-
-        add_settings_section(
-            'kscc_main_section',
-            '表示設定',
-            array($this, 'render_section_description'),
-            'kashiwazaki-seo-code-clipper'
-        );
-
-        add_settings_field(
-            'background_color',
-            '背景色',
-            array($this, 'render_background_color_field'),
-            'kashiwazaki-seo-code-clipper',
-            'kscc_main_section'
-        );
-
-        add_settings_field(
-            'text_color',
-            'テキスト色',
-            array($this, 'render_text_color_field'),
-            'kashiwazaki-seo-code-clipper',
-            'kscc_main_section'
-        );
-
-        add_settings_section(
-            'kscc_target_section',
-            'コピーボタンの適用範囲',
-            array($this, 'render_target_section_description'),
-            'kashiwazaki-seo-code-clipper'
-        );
-
-        add_settings_field(
-            'target_mode',
-            '適用モード',
-            array($this, 'render_target_mode_field'),
-            'kashiwazaki-seo-code-clipper',
-            'kscc_target_section'
-        );
-
-        add_settings_field(
-            'target_class',
-            '対象クラス名',
-            array($this, 'render_target_class_field'),
-            'kashiwazaki-seo-code-clipper',
-            'kscc_target_section'
-        );
-
-        add_settings_section(
-            'kscc_feature_section',
-            '追加機能',
-            array($this, 'render_feature_section_description'),
-            'kashiwazaki-seo-code-clipper'
-        );
-
-        add_settings_field(
-            'show_language_label',
-            '言語ラベル表示',
-            array($this, 'render_language_label_field'),
-            'kashiwazaki-seo-code-clipper',
-            'kscc_feature_section'
-        );
-
-        add_settings_field(
-            'enable_copy_tracking',
-            'コピー統計記録',
-            array($this, 'render_copy_tracking_field'),
-            'kashiwazaki-seo-code-clipper',
-            'kscc_feature_section'
         );
     }
 
@@ -203,7 +116,8 @@ class Kashiwazaki_SEO_Code_Clipper {
             ? sanitize_hex_color($input['text_color'])
             : $this->default_options['text_color'];
 
-        $sanitized['target_mode'] = isset($input['target_mode']) && in_array($input['target_mode'], array('all', 'class'))
+        $valid_modes = array('pre_only', 'code_only', 'pre_and_code', 'class_only');
+        $sanitized['target_mode'] = isset($input['target_mode']) && in_array($input['target_mode'], $valid_modes)
             ? $input['target_mode']
             : $this->default_options['target_mode'];
 
@@ -227,140 +141,23 @@ class Kashiwazaki_SEO_Code_Clipper {
     }
 
     /**
-     * セクション説明を表示
+     * 現在のタブを取得
      */
-    public function render_section_description() {
-        echo '<p>コードブロックの表示スタイルを設定します。</p>';
+    private function get_current_tab() {
+        return isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'settings';
     }
 
     /**
-     * ターゲットセクション説明を表示
+     * 管理ページを表示（タブ切り替え式）
      */
-    public function render_target_section_description() {
-        echo '<p>コピーボタンを表示するコードブロックの範囲を設定します。</p>';
-    }
-
-    /**
-     * 追加機能セクション説明を表示
-     */
-    public function render_feature_section_description() {
-        echo '<p>SEO強化のための追加機能を設定します。</p>';
-    }
-
-    /**
-     * 背景色フィールドを表示
-     */
-    public function render_background_color_field() {
-        $options = $this->get_options();
-        ?>
-        <input type="text"
-               name="kscc_options[background_color]"
-               value="<?php echo esc_attr($options['background_color']); ?>"
-               class="kscc-color-picker"
-               data-default-color="<?php echo esc_attr($this->default_options['background_color']); ?>" />
-        <p class="description">コードブロックの背景色を選択してください。</p>
-        <?php
-    }
-
-    /**
-     * テキスト色フィールドを表示
-     */
-    public function render_text_color_field() {
-        $options = $this->get_options();
-        ?>
-        <input type="text"
-               name="kscc_options[text_color]"
-               value="<?php echo esc_attr($options['text_color']); ?>"
-               class="kscc-color-picker"
-               data-default-color="<?php echo esc_attr($this->default_options['text_color']); ?>" />
-        <p class="description">コードブロックのテキスト色を選択してください。</p>
-        <?php
-    }
-
-    /**
-     * ターゲットモードフィールドを表示
-     */
-    public function render_target_mode_field() {
-        $options = $this->get_options();
-        ?>
-        <fieldset>
-            <label>
-                <input type="radio"
-                       name="kscc_options[target_mode]"
-                       value="all"
-                       <?php checked($options['target_mode'], 'all'); ?> />
-                すべてのコードブロックにコピーボタンを表示
-            </label>
-            <br />
-            <label>
-                <input type="radio"
-                       name="kscc_options[target_mode]"
-                       value="class"
-                       <?php checked($options['target_mode'], 'class'); ?> />
-                指定したクラスを持つコードブロックのみにコピーボタンを表示
-            </label>
-        </fieldset>
-        <?php
-    }
-
-    /**
-     * ターゲットクラスフィールドを表示
-     */
-    public function render_target_class_field() {
-        $options = $this->get_options();
-        ?>
-        <input type="text"
-               name="kscc_options[target_class]"
-               value="<?php echo esc_attr($options['target_class']); ?>"
-               class="regular-text"
-               placeholder="例: code-copyable" />
-        <p class="description">「指定したクラスのみ」を選択した場合、ここに指定したクラス名を持つコードブロックにのみコピーボタンが表示されます。<br />複数のクラスを指定する場合は、カンマ区切りで入力してください（例: class1, class2）</p>
-        <?php
-    }
-
-    /**
-     * 言語ラベルフィールドを表示
-     */
-    public function render_language_label_field() {
-        $options = $this->get_options();
-        ?>
-        <label>
-            <input type="checkbox"
-                   name="kscc_options[show_language_label]"
-                   value="1"
-                   <?php checked($options['show_language_label'], true); ?> />
-            コードブロックの左上に言語名を自動表示する
-        </label>
-        <p class="description">コードの内容から言語（PHP, JavaScript, Python等）を自動判別し、ラベルとして表示します。</p>
-        <?php
-    }
-
-    /**
-     * コピー統計フィールドを表示
-     */
-    public function render_copy_tracking_field() {
-        $options = $this->get_options();
-        ?>
-        <label>
-            <input type="checkbox"
-                   name="kscc_options[enable_copy_tracking]"
-                   value="1"
-                   <?php checked($options['enable_copy_tracking'], true); ?> />
-            コピーボタンのクリック回数を記録する
-        </label>
-        <p class="description">どのコードがよくコピーされているかを「コピー統計」で確認できます。</p>
-        <?php
-    }
-
-    /**
-     * 設定ページを表示
-     */
-    public function render_settings_page() {
+    public function render_admin_page() {
         if (!current_user_can('manage_options')) {
             return;
         }
 
-        if (isset($_GET['settings-updated'])) {
+        $current_tab = $this->get_current_tab();
+
+        if (isset($_GET['settings-updated']) && $current_tab === 'settings') {
             add_settings_error(
                 'kscc_messages',
                 'kscc_message',
@@ -368,30 +165,217 @@ class Kashiwazaki_SEO_Code_Clipper {
                 'updated'
             );
         }
-
-        settings_errors('kscc_messages');
         ?>
-        <div class="wrap">
-            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-            <form action="options.php" method="post">
+        <div class="wrap kscc-admin-wrap">
+            <h1>Kashiwazaki SEO Code Clipper</h1>
+
+            <nav class="nav-tab-wrapper kscc-nav-tabs">
+                <a href="<?php echo admin_url('admin.php?page=kashiwazaki-seo-code-clipper&tab=settings'); ?>"
+                   class="nav-tab <?php echo $current_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
+                    設定
+                </a>
+                <a href="<?php echo admin_url('admin.php?page=kashiwazaki-seo-code-clipper&tab=stats'); ?>"
+                   class="nav-tab <?php echo $current_tab === 'stats' ? 'nav-tab-active' : ''; ?>">
+                    コピー統計
+                </a>
+                <a href="<?php echo admin_url('admin.php?page=kashiwazaki-seo-code-clipper&tab=guide'); ?>"
+                   class="nav-tab <?php echo $current_tab === 'guide' ? 'nav-tab-active' : ''; ?>">
+                    使い方
+                </a>
+            </nav>
+
+            <div class="kscc-tab-content">
                 <?php
-                settings_fields('kscc_settings_group');
-                do_settings_sections('kashiwazaki-seo-code-clipper');
-                submit_button('設定を保存');
+                switch ($current_tab) {
+                    case 'stats':
+                        $this->render_stats_tab();
+                        break;
+                    case 'guide':
+                        $this->render_guide_tab();
+                        break;
+                    default:
+                        $this->render_settings_tab();
+                        break;
+                }
                 ?>
-            </form>
+            </div>
         </div>
         <?php
     }
 
     /**
-     * 統計ページを表示
+     * 設定タブを表示
      */
-    public function render_stats_page() {
-        if (!current_user_can('manage_options')) {
-            return;
-        }
+    private function render_settings_tab() {
+        settings_errors('kscc_messages');
+        $options = $this->get_options();
+        ?>
+        <form action="options.php" method="post">
+            <?php settings_fields('kscc_settings_group'); ?>
 
+            <div class="kscc-settings-section">
+                <h2>コピーボタンの適用範囲</h2>
+                <p class="kscc-section-desc">どの要素にコピーボタンを表示するか選択してください。</p>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">適用モード</th>
+                        <td>
+                            <fieldset class="kscc-target-mode-options">
+                                <label class="kscc-radio-card <?php echo $options['target_mode'] === 'pre_only' ? 'selected' : ''; ?>">
+                                    <input type="radio"
+                                           name="kscc_options[target_mode]"
+                                           value="pre_only"
+                                           <?php checked($options['target_mode'], 'pre_only'); ?> />
+                                    <span class="kscc-radio-card-content">
+                                        <strong>複数行コード（&lt;pre&gt;タグ）のみ</strong>
+                                        <span class="kscc-radio-desc">WordPress標準の「コード」ブロックや「整形済みテキスト」ブロックに適用されます。</span>
+                                        <span class="kscc-radio-example">
+                                            <span class="kscc-example-label">対象になるもの：</span>
+                                            投稿編集画面で「+」→「コード」で追加した、背景色付きの複数行表示のコード
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <label class="kscc-radio-card <?php echo $options['target_mode'] === 'code_only' ? 'selected' : ''; ?>">
+                                    <input type="radio"
+                                           name="kscc_options[target_mode]"
+                                           value="code_only"
+                                           <?php checked($options['target_mode'], 'code_only'); ?> />
+                                    <span class="kscc-radio-card-content">
+                                        <strong>インラインコード（&lt;code&gt;タグ）のみ</strong>
+                                        <span class="kscc-radio-desc">文章中の短いコードにのみ適用されます。複数行コードには適用されません。</span>
+                                        <span class="kscc-radio-example">
+                                            <span class="kscc-example-label">対象になるもの：</span>
+                                            文章中で<code>このように</code>装飾された短いコード
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <label class="kscc-radio-card <?php echo $options['target_mode'] === 'pre_and_code' ? 'selected' : ''; ?>">
+                                    <input type="radio"
+                                           name="kscc_options[target_mode]"
+                                           value="pre_and_code"
+                                           <?php checked($options['target_mode'], 'pre_and_code'); ?> />
+                                    <span class="kscc-radio-card-content">
+                                        <strong>すべてのコード（&lt;pre&gt; + &lt;code&gt;タグ）</strong>
+                                        <span class="kscc-radio-desc">複数行コードとインラインコードの両方に適用されます。</span>
+                                        <span class="kscc-radio-example">
+                                            <span class="kscc-example-label">対象になるもの：</span>
+                                            上記2つの両方
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <label class="kscc-radio-card <?php echo $options['target_mode'] === 'class_only' ? 'selected' : ''; ?>">
+                                    <input type="radio"
+                                           name="kscc_options[target_mode]"
+                                           value="class_only"
+                                           <?php checked($options['target_mode'], 'class_only'); ?> />
+                                    <span class="kscc-radio-card-content">
+                                        <strong>指定したCSSクラスを持つ要素のみ</strong>
+                                        <span class="kscc-radio-desc">特定の要素だけにコピーボタンを表示したい場合に選択してください。</span>
+                                    </span>
+                                </label>
+                            </fieldset>
+                        </td>
+                    </tr>
+                    <tr class="kscc-class-input-row" style="<?php echo $options['target_mode'] !== 'class_only' ? 'display:none;' : ''; ?>">
+                        <th scope="row">対象のCSSクラス名</th>
+                        <td>
+                            <input type="text"
+                                   name="kscc_options[target_class]"
+                                   value="<?php echo esc_attr($options['target_class']); ?>"
+                                   class="regular-text"
+                                   placeholder="例: my-copyable-code" />
+                            <p class="description">
+                                ここに入力したクラス名を持つ要素にのみコピーボタンが表示されます。<br>
+                                複数指定する場合はカンマ区切りで入力してください（例: class1, class2）
+                            </p>
+                            <div class="kscc-howto-box">
+                                <p><strong>設定方法：</strong></p>
+                                <ol>
+                                    <li>投稿編集画面で対象のブロックを選択</li>
+                                    <li>右サイドバーの「ブロック」タブを開く</li>
+                                    <li>「高度な設定」を開く</li>
+                                    <li>「追加CSSクラス」欄に上記で指定したクラス名を入力</li>
+                                </ol>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="kscc-settings-section">
+                <h2>表示スタイル</h2>
+                <p class="kscc-section-desc">コピーボタン付きコードの見た目を設定します。</p>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">背景色</th>
+                        <td>
+                            <input type="text"
+                                   name="kscc_options[background_color]"
+                                   value="<?php echo esc_attr($options['background_color']); ?>"
+                                   class="kscc-color-picker"
+                                   data-default-color="<?php echo esc_attr($this->default_options['background_color']); ?>" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">テキスト色</th>
+                        <td>
+                            <input type="text"
+                                   name="kscc_options[text_color]"
+                                   value="<?php echo esc_attr($options['text_color']); ?>"
+                                   class="kscc-color-picker"
+                                   data-default-color="<?php echo esc_attr($this->default_options['text_color']); ?>" />
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="kscc-settings-section">
+                <h2>追加機能</h2>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">言語ラベル</th>
+                        <td>
+                            <label>
+                                <input type="checkbox"
+                                       name="kscc_options[show_language_label]"
+                                       value="1"
+                                       <?php checked($options['show_language_label'], true); ?> />
+                                コードの言語名を自動表示する（PHP, JavaScript, Python など）
+                            </label>
+                            <p class="description">コードの内容から言語を自動判別して、左上にラベル表示します。</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">コピー統計</th>
+                        <td>
+                            <label>
+                                <input type="checkbox"
+                                       name="kscc_options[enable_copy_tracking]"
+                                       value="1"
+                                       <?php checked($options['enable_copy_tracking'], true); ?> />
+                                コピーボタンのクリック回数を記録する
+                            </label>
+                            <p class="description">どのコードがよくコピーされているかを「コピー統計」タブで確認できます。</p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <?php submit_button('設定を保存'); ?>
+        </form>
+        <?php
+    }
+
+    /**
+     * 統計タブを表示
+     */
+    private function render_stats_tab() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'kscc_copy_stats';
 
@@ -400,11 +384,10 @@ class Kashiwazaki_SEO_Code_Clipper {
 
         if (!$table_exists) {
             ?>
-            <div class="wrap">
-                <h1>コピー統計 - Kashiwazaki SEO Code Clipper</h1>
-                <div class="notice notice-info">
-                    <p>まだコピー統計データがありません。コピーボタンが使用されると、ここに統計が表示されます。</p>
-                </div>
+            <div class="kscc-empty-state">
+                <div class="kscc-empty-icon">📊</div>
+                <h2>まだ統計データがありません</h2>
+                <p>コピーボタンが使用されると、ここに統計が表示されます。</p>
             </div>
             <?php
             return;
@@ -424,68 +407,161 @@ class Kashiwazaki_SEO_Code_Clipper {
         $total_codes = $wpdb->get_var("SELECT COUNT(*) FROM {$table_name}");
 
         ?>
-        <div class="wrap">
-            <h1>コピー統計 - Kashiwazaki SEO Code Clipper</h1>
+        <div class="kscc-stats-summary">
+            <div class="kscc-stat-box">
+                <span class="kscc-stat-number"><?php echo number_format($total_copies ?: 0); ?></span>
+                <span class="kscc-stat-label">総コピー回数</span>
+            </div>
+            <div class="kscc-stat-box">
+                <span class="kscc-stat-number"><?php echo number_format($total_codes ?: 0); ?></span>
+                <span class="kscc-stat-label">トラッキング中のコード</span>
+            </div>
+        </div>
 
-            <div class="kscc-stats-summary">
-                <div class="kscc-stat-box">
-                    <span class="kscc-stat-number"><?php echo number_format($total_copies ?: 0); ?></span>
-                    <span class="kscc-stat-label">総コピー回数</span>
-                </div>
-                <div class="kscc-stat-box">
-                    <span class="kscc-stat-number"><?php echo number_format($total_codes ?: 0); ?></span>
-                    <span class="kscc-stat-label">トラッキング中のコード</span>
+        <?php if (empty($stats)) : ?>
+            <div class="kscc-empty-state">
+                <p>まだコピー統計データがありません。</p>
+            </div>
+        <?php else : ?>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">ページ</th>
+                        <th style="width: 35%;">コードプレビュー</th>
+                        <th style="width: 10%;">言語</th>
+                        <th style="width: 10%;">コピー回数</th>
+                        <th style="width: 20%;">最終コピー日時</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($stats as $stat) : ?>
+                        <tr>
+                            <td>
+                                <?php if ($stat->post_title) : ?>
+                                    <a href="<?php echo get_permalink($stat->post_id); ?>" target="_blank">
+                                        <?php echo esc_html($stat->post_title); ?>
+                                    </a>
+                                <?php else : ?>
+                                    <span class="kscc-deleted-post">（削除済み）</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <code class="kscc-code-preview"><?php echo esc_html($stat->code_preview); ?></code>
+                            </td>
+                            <td>
+                                <?php if ($stat->language) : ?>
+                                    <span class="kscc-language-badge"><?php echo esc_html($stat->language); ?></span>
+                                <?php else : ?>
+                                    <span class="kscc-no-language">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <strong><?php echo number_format($stat->copy_count); ?></strong>
+                            </td>
+                            <td>
+                                <?php echo esc_html($stat->last_copied_at); ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif;
+    }
+
+    /**
+     * 使い方タブを表示
+     */
+    private function render_guide_tab() {
+        ?>
+        <div class="kscc-guide-content">
+            <div class="kscc-guide-section">
+                <h2>このプラグインでできること</h2>
+                <ul class="kscc-feature-list">
+                    <li><strong>コピーボタン自動追加</strong> - 指定した要素にワンクリックでコピーできるボタンを表示</li>
+                    <li><strong>言語の自動判別</strong> - コードの内容からPHP、JavaScript、Pythonなどの言語を判別してラベル表示</li>
+                    <li><strong>コピー統計</strong> - どのコードがよくコピーされているか分析可能</li>
+                </ul>
+            </div>
+
+            <div class="kscc-guide-section kscc-guide-important">
+                <h2>適用モードの違い</h2>
+
+                <div class="kscc-mode-cards">
+                    <div class="kscc-mode-card">
+                        <h3>複数行コード（&lt;pre&gt;タグ）のみ</h3>
+                        <div class="kscc-mode-example">
+                            <p><strong>対象になるもの：</strong></p>
+                            <div class="kscc-visual-example kscc-pre-example">
+                                <div class="kscc-example-header">
+                                    <span class="kscc-example-badge">コピーボタンが付く</span>
+                                </div>
+                                <pre><code>&lt;?php
+echo "Hello World";
+?&gt;</code></pre>
+                            </div>
+                            <p class="kscc-howto">
+                                <strong>作り方：</strong>投稿編集画面 → 「+」ボタン → 「コード」を検索して追加
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="kscc-mode-card">
+                        <h3>インラインコード（&lt;code&gt;タグ）のみ</h3>
+                        <div class="kscc-mode-example">
+                            <p><strong>対象になるもの：</strong></p>
+                            <p class="kscc-inline-example">
+                                文章の中で <code class="kscc-inline-code-example">site:example.com</code> のように
+                                装飾された短いコード
+                            </p>
+                            <p class="kscc-howto">
+                                <strong>作り方：</strong>段落内でテキストを選択 → ツールバーの「∨」→「インラインコード」
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="kscc-mode-card">
+                        <h3>すべてのコード（&lt;pre&gt; + &lt;code&gt;タグ）</h3>
+                        <div class="kscc-mode-example">
+                            <p><strong>対象になるもの：</strong></p>
+                            <p>上記2つの両方にコピーボタンが付きます。</p>
+                        </div>
+                    </div>
+
+                    <div class="kscc-mode-card">
+                        <h3>指定したCSSクラスを持つ要素のみ</h3>
+                        <div class="kscc-mode-example">
+                            <p>特定のコードにだけコピーボタンを付けたい場合に使います。</p>
+                            <p class="kscc-howto">
+                                <strong>設定方法：</strong><br>
+                                1. 設定タブで適用モードを選択し、クラス名を入力（例: <code>copy-me</code>）<br>
+                                2. 投稿編集画面で対象ブロックを選択<br>
+                                3. 右サイドバー「ブロック」→「高度な設定」→「追加CSSクラス」に同じクラス名を入力
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <?php if (empty($stats)) : ?>
-                <div class="notice notice-info">
-                    <p>まだコピー統計データがありません。</p>
+            <div class="kscc-guide-section">
+                <h2>よくある質問</h2>
+
+                <div class="kscc-faq">
+                    <div class="kscc-faq-item">
+                        <h4>Q: コピーボタンが表示されません</h4>
+                        <p>A: 適用モードを確認してください。「複数行コードのみ」の場合、文章中の短いインラインコードには表示されません。「すべてのコード」を選択すると表示されます。</p>
+                    </div>
+
+                    <div class="kscc-faq-item">
+                        <h4>Q: 特定のコードにだけコピーボタンを付けたい</h4>
+                        <p>A: 「指定したCSSクラスを持つ要素のみ」を選択し、クラス名を設定してください。そのクラスを付けたブロックにのみコピーボタンが表示されます。</p>
+                    </div>
+
+                    <div class="kscc-faq-item">
+                        <h4>Q: 言語ラベルが正しく表示されません</h4>
+                        <p>A: 言語はコードの内容から自動判別しています。短いコードや一般的でない言語は判別できない場合があります。</p>
+                    </div>
                 </div>
-            <?php else : ?>
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th style="width: 25%;">ページ</th>
-                            <th style="width: 35%;">コードプレビュー</th>
-                            <th style="width: 10%;">言語</th>
-                            <th style="width: 10%;">コピー回数</th>
-                            <th style="width: 20%;">最終コピー日時</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($stats as $stat) : ?>
-                            <tr>
-                                <td>
-                                    <?php if ($stat->post_title) : ?>
-                                        <a href="<?php echo get_permalink($stat->post_id); ?>" target="_blank">
-                                            <?php echo esc_html($stat->post_title); ?>
-                                        </a>
-                                    <?php else : ?>
-                                        <span class="kscc-deleted-post">（削除済み）</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <code class="kscc-code-preview"><?php echo esc_html($stat->code_preview); ?></code>
-                                </td>
-                                <td>
-                                    <?php if ($stat->language) : ?>
-                                        <span class="kscc-language-badge"><?php echo esc_html($stat->language); ?></span>
-                                    <?php else : ?>
-                                        <span class="kscc-no-language">-</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <strong><?php echo number_format($stat->copy_count); ?></strong>
-                                </td>
-                                <td>
-                                    <?php echo esc_html($stat->last_copied_at); ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
+            </div>
         </div>
         <?php
     }
@@ -494,7 +570,7 @@ class Kashiwazaki_SEO_Code_Clipper {
      * 管理画面用アセットを読み込み
      */
     public function enqueue_admin_assets($hook) {
-        if (!in_array($hook, array('toplevel_page_kashiwazaki-seo-code-clipper', 'kashiwazaki-seo-code-clipper_page_kashiwazaki-seo-code-clipper-stats'))) {
+        if ($hook !== 'toplevel_page_kashiwazaki-seo-code-clipper') {
             return;
         }
 
@@ -532,7 +608,8 @@ class Kashiwazaki_SEO_Code_Clipper {
 
         // カスタムCSSを追加
         $custom_css = sprintf(
-            '.kscc-code-wrapper pre {
+            '.kscc-code-wrapper pre,
+            .kscc-inline-code-wrapper code {
                 background-color: %s !important;
                 color: %s !important;
             }',
@@ -684,7 +761,7 @@ function kscc_activate() {
     $default_options = array(
         'background_color' => '#000000',
         'text_color' => '#ffffff',
-        'target_mode' => 'all',
+        'target_mode' => 'pre_only',
         'target_class' => '',
         'show_language_label' => true,
         'enable_copy_tracking' => true,
